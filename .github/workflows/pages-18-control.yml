@@ -1,0 +1,36 @@
+name: pages 18 control
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    steps:
+      - name: create page
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/page"
+          printf '%s\n' 'test 18 control' > "$RUNNER_TEMP/page/index.html"
+          tar --format=ustar --sort=name --owner=0 --group=0 --numeric-owner --mtime='UTC 1970-01-01' -C "$RUNNER_TEMP/page" -cf "$RUNNER_TEMP/artifact.tar" index.html
+          sha256sum "$RUNNER_TEMP/artifact.tar"
+      - name: upload page
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 1
+      - name: publish page
+        id: deployment
+        uses: actions/deploy-pages@5e98f10ce206463e411e82ac66ef0f2df79c5499
